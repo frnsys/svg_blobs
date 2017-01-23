@@ -21,23 +21,35 @@ function randRange(r) {
     return (Math.random() * r * 2) - r
 }
 
+// keep a value within a range [mn, mx]
 function clamp(v, mn, mx) {
   return Math.max(Math.min(v, mx), mn)
 }
 
 class BlobImage {
   constructor(el) {
+    // compute some dimension stuff from the element
     this.el = el
     this.height = this.el.clientHeight
     this.width = this.el.clientWidth
+    this.center = {x: this.width/2, y: this.height/2}
+
+    // setup the SVG
     this.svg = SVG(el).size(this.width, this.height)
+
+    // create an SVG element of the image
     this.imageEl = this.el.getElementsByTagName('img')[0]
     this.imageSrc = this.imageEl.src
     this.image = this.svg.image(this.imageSrc, this.width, this.height)
-    this.group = this.svg.group()
-    this.shadow = this.svg.group()
-    this.center = {x: this.width/2, y: this.height/2}
 
+
+    // the masking blob parts go here
+    this.group = this.svg.group()
+
+    // the shadow blob parts go here
+    this.shadow = this.svg.group()
+
+    // create the blob parts
     this.blobParts = []
     for (var i=0; i<n_circles; i++) {
       var blobPart = this.makeBlobPart()
@@ -62,6 +74,8 @@ class BlobImage {
     var self = this
     this.hovered = false
     if (onHover === 'reveal') {
+      // on enter, expand blob parts to cover the entire image
+      // as a fallback, set the original html img to visible
       this.el.addEventListener('mouseenter', function() {
         var r = Math.max(self.height, self.width)/2
         self.hovered = true
@@ -74,6 +88,9 @@ class BlobImage {
           });
         })
       })
+
+      // on leave, shrink the blob parts back to their original size
+      // and hide the html img again
       this.el.addEventListener('mouseleave', function() {
         self.imageEl.style.visibility = 'hidden'
         self.blobParts.map(function(bp) {
@@ -86,6 +103,7 @@ class BlobImage {
         })
       })
     } else if (onHover === 'follow') {
+      // set the blob parts' centers to the mouse position
       this.el.addEventListener('mousemove', function(ev) {
         self.blobParts.map(function(bp) {
           bp.center = {
@@ -94,6 +112,8 @@ class BlobImage {
           }
         })
       })
+
+      // reset the blob parts' centers
       this.el.addEventListener('mouseleave', function() {
         self.blobParts.map(function(bp) {
           bp.center = bp._center
@@ -113,6 +133,7 @@ class BlobImage {
   }
 
   clampPos(pos, rad) {
+    // keep blob parts within the image.
     // multiplying by 2.2 instead of 2 for some padding
     pos.x = clamp(pos.x, 0, this.width-rad*2.2)
     pos.y = clamp(pos.y, 0, this.height-rad*2.2)
@@ -133,6 +154,7 @@ class BlobImage {
         y: this.center.y + randRange(centerMaxDist.y)
     }
 
+    // so no blob parts start partially off the image
     this.clampPos(pos, radius)
 
     return {
@@ -140,7 +162,7 @@ class BlobImage {
       vel: {x: 0, y: 0},
       pos: pos,
       center: center,
-      _center: center,
+      _center: center, // so we remember the original center
       circle: this.svg.circle(radius*2)
         .move(pos.x, pos.y)
         .fill({ color: '#fff' }),
@@ -173,6 +195,8 @@ class BlobImage {
       .fill({color: '#ff0000'})
   }
 
+  // compute force on each blob,
+  // and apply velocity
   update() {
     if (this.hovered) {
       return
@@ -209,6 +233,7 @@ class BlobImage {
 const figures = [...document.querySelectorAll('.project figure')]
 const blobs = []
 figures.map(function(el) {
+  // wait for image to load if necessary
   var img = el.querySelector('img');
   if (img.complete) {
     blobs.push(new BlobImage(el))
