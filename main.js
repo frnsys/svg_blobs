@@ -10,7 +10,7 @@ const closenessToCenter = {x: 1.5, y: 1}
 const n_circles = 5
 const padding = 10
 const shadowOffset = {x: 6, y: 6}
-const radiusRange = [60,100]
+const radiusRange = [0.4,0.9]
 const velDamp = {x: 40, y: 40}
 const gooeyness = 20;
 const bounceStrength = 0.5
@@ -135,12 +135,13 @@ class BlobImage {
   clampPos(pos, rad) {
     // keep blob parts within the image.
     // multiplying by 2.2 instead of 2 for some padding
-    pos.x = clamp(pos.x, 0, this.width-rad*2.2)
-    pos.y = clamp(pos.y, 0, this.height-rad*2.2)
+    pos.x = clamp(pos.x, padding, this.width-rad*2.2)
+    pos.y = clamp(pos.y, padding, this.height-rad*2.2)
   }
 
   makeBlobPart() {
-    var radius = radiusRange[0] + (Math.random() * (radiusRange[1] - radiusRange[0]))
+    var radiusMult = radiusRange[0] + (Math.random() * (radiusRange[1] - radiusRange[0]))
+    var radius = radiusMult * Math.min(this.width, this.height)/2
     var centerMaxDist = {
       x: this.width/2 - radius*2 - padding,
       y: this.height/2 - radius*2 - padding
@@ -255,4 +256,3 @@ setInterval(function() {
     }
   })
 }, Math.floor(1000/24));
-
