@@ -12,7 +12,7 @@ const padding = 10
 const shadowOffset = {x: 6, y: 6}
 const radiusRange = [0.4,0.9]
 const velDamp = {x: 40, y: 40}
-const gooeyness = 20;
+const gooeyness = 20
 const bounceStrength = 0.5
 const onHover = 'reveal' // 'reveal' or 'follow'
 
@@ -38,10 +38,9 @@ class BlobImage {
     this.svg = SVG(el).size(this.width, this.height)
 
     // create an SVG element of the image
-    this.imageEl = this.el.getElementsByTagName('img')[0]
+    this.imageEl = this.el.querySelector('img')
     this.imageSrc = this.imageEl.src
     this.image = this.svg.image(this.imageSrc, this.width, this.height)
-
 
     // the masking blob parts go here
     this.group = this.svg.group()
@@ -85,7 +84,7 @@ class BlobImage {
             self.image.maskWith(self.group)
           }).after(function() {
             self.imageEl.style.visibility = 'visible'
-          });
+          })
         })
       })
 
@@ -99,7 +98,7 @@ class BlobImage {
             self.image.maskWith(self.group)
           }).after(function() {
             self.hovered = false
-          });
+          })
         })
       })
     } else if (onHover === 'follow') {
@@ -228,14 +227,32 @@ class BlobImage {
     // need to re-apply the mask after movement
     this.image.maskWith(this.group)
   }
+
+  resize() {
+    var scale = this.imageEl.width/this.width
+    this.width = this.imageEl.width
+    this.height = this.imageEl.height
+    this.center = {x: this.width/2, y: this.height/2}
+    this.svg.size(this.width, this.height)
+    this.image.size(this.width, this.height)
+    this.blobParts.map(bp => {
+      bp.rad *= scale
+      bp.circle.radius(bp.rad)
+      bp.shadow.radius(bp.rad)
+      bp.center = this.center
+      bp._center = this.center
+      this.clampPos(bp.pos, bp.rad)
+    })
+  }
 }
 
 // create blob images
 const figures = [...document.querySelectorAll('.project figure')]
 const blobs = []
+const imgDims = []
 figures.map(function(el) {
   // wait for image to load if necessary
-  var img = el.querySelector('img');
+  var img = el.querySelector('img')
   if (img.complete) {
     blobs.push(new BlobImage(el))
   } else {
@@ -245,9 +262,12 @@ figures.map(function(el) {
   }
 })
 
+window.addEventListener('resize', function() {
+  blobs.map(blob => blob.resize())
+})
 
 // use setInterval to specify FPS
-const FPS = 24;
+const FPS = 24
 setInterval(function() {
   blobs.map(function(blob) {
     // only update visible blobs
@@ -255,4 +275,5 @@ setInterval(function() {
       blob.update()
     }
   })
-}, Math.floor(1000/24));
+}, Math.floor(1000/24))
+
